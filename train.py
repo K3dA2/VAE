@@ -32,11 +32,13 @@ def kl_loss(mu,l_sigma):
     kl_loss = -0.5 * torch.sum(1 + l_sigma - mu**2 - torch.exp(l_sigma))
     return kl_loss
 
-def training_loop(n_epochs, optimizer, model, loss_fn, device,l_weight = 10,  
+def training_loop(n_epochs, optimizer, model, loss_fn, device,l_weight = 100,  
                   epoch_start = 0, batch_size = 64, 
                   data_length = 4000,max_grad_norm=1.0):
+    data_idx = list(range(0,data_length))
     with torch.autograd.set_detect_anomaly(True):
         for epoch in range(epoch_start, n_epochs + 1):
+            random.shuffle(data_idx)
             loss_train = 0.0
             # Use tqdm function for the progress bar
             with tqdm(range(0, (data_length//batch_size)), desc=f'Epoch {epoch}', unit=' batch') as pbar:
@@ -49,7 +51,7 @@ def training_loop(n_epochs, optimizer, model, loss_fn, device,l_weight = 10,
                         sp = st + batch_size
                     img_arr = []
                     for i in range(st,sp):
-                        img = plt.imread(path + '/' + image_names[i])
+                        img = plt.imread(path + '/' + image_names[data_idx[i]])
                         img = reshape_img(img)
                         img = np.expand_dims(img, 0)
                         img_arr.append(img)
@@ -68,7 +70,7 @@ def training_loop(n_epochs, optimizer, model, loss_fn, device,l_weight = 10,
                     
                     mse_loss = loss_fn(outputs, imgs)
                     kl = kl_loss(mu,sigma)
-                    loss = l_weight* mse_loss + kl
+                    loss = l_weight* mse_loss + 0.4*kl
                     
                     loss_train += loss.mean().item()  # Accumulate loss values
                     pbar.set_postfix(loss=loss.item(),mse=mse_loss.item(),kl_loss=kl.item())
