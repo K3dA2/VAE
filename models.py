@@ -14,8 +14,8 @@ class Encoder(nn.Module):
     def __init__(self, z_dim = 64) -> None:
         super().__init__()
         self.res = ResNet(3,64,useMaxPool=True)
-        self.res1 = ResNet(64,128,useMaxPool=True)
-        self.res2 = ResNet(128,256,useMaxPool=True)
+        self.res1 = ResNet(64,256,useMaxPool=True)
+        self.res2 = ResNet(256,512,useMaxPool=True)
         #self.ln = nn.Linear(None,512)
         self.mu = nn.Linear(512,z_dim)
         self.sigma = nn.Linear(512,z_dim)
@@ -33,11 +33,11 @@ class Encoder(nn.Module):
         x = nn.Linear(flattened_size,512).to(x.device)(x)
 
         mu = self.mu(x)
-        l_sigma = self.sigma(x)
+        sigma = self.sigma(x)
 
-        z = mu + torch.exp(l_sigma)*torch.rand_like(l_sigma)
+        z = mu + sigma * torch.rand_like(sigma)
 
-        return mu,l_sigma,z
+        return mu,sigma,z
 
 
 class Decoder(nn.Module):
@@ -46,8 +46,8 @@ class Decoder(nn.Module):
         self.z_dim = z_dim
         self.ln = nn.Linear(z_dim,256)
         self.res = ResNet(1,64,upscale=True)
-        self.res1 = ResNet(64,32,upscale=True)
-        self.res2 = ResNet(32,16)
+        self.res1 = ResNet(64,128,upscale=True)
+        self.res2 = ResNet(128,16)
         self.conv = nn.Conv2d(16,3,kernel_size=3, padding=1)
 
     def forward(self,z):
@@ -73,11 +73,11 @@ class VAE(nn.Module):
         self.z_dim = z_dim
     
     def forward(self,x):
-        mu,l_sigma,z = self.encoder.forward(x)
+        mu,sigma,z = self.encoder.forward(x)
 
         out = self.decoder.forward(z)
 
-        return mu,l_sigma,out
+        return mu,sigma,out
     
     def inferenceR(self,should_save = True):
         z_var = torch.rand(1,self.z_dim).to(self.device)

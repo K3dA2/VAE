@@ -28,11 +28,11 @@ def reshape_img(img,size = (64,64)):
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-def kl_loss(mu,l_sigma):
-    kl_loss = -0.5 * torch.sum(1 + l_sigma - mu**2 - torch.exp(l_sigma))
+def kl_loss(mu,sigma):
+    kl_loss = -0.5 * torch.sum(1 + torch.log(sigma) - mu**2 - sigma**2)
     return kl_loss
 
-def training_loop(n_epochs, optimizer, model, loss_fn, device,l_weight = 10,  
+def training_loop(n_epochs, optimizer, model, loss_fn, device,l_weight = 1000,  
                   epoch_start = 0, batch_size = 64, 
                   data_length = 4000,max_grad_norm=1.0):
     data_idx = list(range(0,data_length))
