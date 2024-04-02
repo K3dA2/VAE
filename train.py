@@ -32,7 +32,8 @@ def kl_loss(mu,l_sigma):
     kl_loss = -0.5 * torch.sum(1 + l_sigma - mu**2 - torch.exp(l_sigma))
     return kl_loss
 
-def training_loop(n_epochs, optimizer, model, loss_fn, device,l_weight = 10,  
+def training_loop(n_epochs, optimizer, model, loss_fn, device,
+                  l_weight = 10, kl_weight = 0.1, 
                   epoch_start = 0, batch_size = 64, 
                   data_length = 4000,max_grad_norm=1.0):
     data_idx = list(range(0,data_length))
@@ -70,7 +71,7 @@ def training_loop(n_epochs, optimizer, model, loss_fn, device,l_weight = 10,
                     
                     mse_loss = loss_fn(outputs, imgs)
                     kl = kl_loss(mu,sigma)
-                    loss = l_weight* mse_loss + kl
+                    loss = (l_weight* mse_loss) + (kl*kl_weight)
                     
                     loss_train += loss.mean().item()  # Accumulate loss values
                     pbar.set_postfix(loss=loss.item(),mse=mse_loss.item(),kl_loss=kl.item())
