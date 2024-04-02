@@ -19,7 +19,7 @@ class ResNet(nn.Module):
         self.conv2 = nn.Conv2d(out_channels, out_channels//2, kernel_size=3, padding=1)
         self.conv3 = nn.Conv2d(out_channels//2, out_channels, kernel_size=3, padding=1)
         self.skip_conv = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1)
-        self.dropout = nn.Dropout2d(0.5)
+        self.dropout = nn.Dropout2d(0.3)
 
     def forward(self, x):
         # Apply LayerNorm after conv1
