@@ -32,7 +32,7 @@ def kl_loss(mu,l_sigma):
     kl_loss = -0.5 * torch.sum(1 + l_sigma - mu**2 - torch.exp(l_sigma))
     return kl_loss
 
-def training_loop(n_epochs, optimizer, model, loss_fn, device,l_weight = 100,  
+def training_loop(n_epochs, optimizer, model, loss_fn, device,l_weight = 10,  
                   epoch_start = 0, batch_size = 64, 
                   data_length = 4000,max_grad_norm=1.0):
     data_idx = list(range(0,data_length))
@@ -70,7 +70,7 @@ def training_loop(n_epochs, optimizer, model, loss_fn, device,l_weight = 100,
                     
                     mse_loss = loss_fn(outputs, imgs)
                     kl = kl_loss(mu,sigma)
-                    loss = l_weight* mse_loss + 0.4*kl
+                    loss = l_weight* mse_loss + kl
                     
                     loss_train += loss.mean().item()  # Accumulate loss values
                     pbar.set_postfix(loss=loss.item(),mse=mse_loss.item(),kl_loss=kl.item())
@@ -87,7 +87,7 @@ def training_loop(n_epochs, optimizer, model, loss_fn, device,l_weight = 100,
                 
             avg_loss_epoch = loss_train / (data_length//batch_size)
             with open("waifu-VAE-4000-loss.txt", "a") as file:
-                file.write(f"Epoch {epoch}: Average Loss: {avg_loss_epoch}\n")
+                file.write(f"{avg_loss_epoch}\n")
             
             print('{} Epoch {}, Training loss {}'.format(
                 datetime.datetime.now(), epoch,
@@ -111,14 +111,14 @@ if __name__ == "__main__":
     image_names = get_data(path)
     print("Image Length: ",len(image_names))
 
-    model = VAE(Encoder,Decoder)
+    model = VAE(Encoder,Decoder,z_dim=200)
     device = torch.device("mps")
     model.to(device)
-    optimizer = optim.AdamW(model.parameters(),lr=3e-4)
-    checkpoint = torch.load(model_path)
-    model.load_state_dict(checkpoint['model_state_dict'])
-    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-    epoch = checkpoint['epoch']
+    optimizer = optim.AdamW(model.parameters(),lr=5e-4)
+    #checkpoint = torch.load(model_path)
+    #model.load_state_dict(checkpoint['model_state_dict'])
+    #optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    #epoch = checkpoint['epoch']
 
     print("Total parameters: ",count_parameters(model))
     loss_fn = nn.MSELoss()  #  <4>
@@ -130,6 +130,6 @@ if __name__ == "__main__":
         loss_fn = loss_fn,
         device = device,
         batch_size = 16,
-        epoch_start = 1,
+        epoch_start = 241,
         data_length = 10_000
     )

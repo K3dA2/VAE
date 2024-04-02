@@ -23,17 +23,17 @@ class ResNet(nn.Module):
 
     def forward(self, x):
         # Apply LayerNorm after conv1
-        out = F.silu(self.conv1(x))
+        out = F.leaky_relu(self.conv1(x))
         out = self.dropout(out)
         out = F.layer_norm(out, out.size()[1:])
         
         # Apply LayerNorm after conv2
-        out = F.silu(self.conv2(out))
+        out = F.leaky_relu(self.conv2(out))
         out = self.dropout(out)
         out = F.layer_norm(out, out.size()[1:])
         
         out1 = self.skip_conv(x)
-        out = F.silu(self.conv3(out))
+        out = F.leaky_relu(self.conv3(out))
         
         if self.useMaxPool:
             #skip = out + out1
@@ -42,7 +42,7 @@ class ResNet(nn.Module):
         elif self.upscale:
             out = F.upsample(out + out1, scale_factor=2)
         else:
-            out = F.silu(out + out1)
+            out = F.leaky_relu(out + out1)
         return out
 
 '''

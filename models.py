@@ -44,7 +44,7 @@ class Decoder(nn.Module):
     def __init__(self, z_dim=64) -> None:
         super().__init__()
         self.z_dim = z_dim
-        self.ln = nn.Linear(z_dim,z_dim*4)
+        self.ln = nn.Linear(z_dim,256)
         self.res = ResNet(1,64,upscale=True)
         self.res1 = ResNet(64,32,upscale=True)
         self.res2 = ResNet(32,16)
@@ -53,7 +53,7 @@ class Decoder(nn.Module):
     def forward(self,z):
         batch_size = z.size(0)
         z = self.ln(z)
-        z = z.view(batch_size,1,int(self.z_dim/4),int(self.z_dim/4))
+        z = z.view(batch_size,1,16,16)
         
         z = self.res(z)
         

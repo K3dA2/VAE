@@ -162,3 +162,5 @@ cython_debug/
 train_utils.py
 Weights/
 plot.ipynb
+waifu-VAE-4000-loss.txt
+Images/
