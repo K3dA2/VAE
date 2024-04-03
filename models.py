@@ -46,9 +46,10 @@ class Decoder(nn.Module):
         self.z_dim = z_dim
         self.ln = nn.Linear(z_dim,256)
         self.res = ResNet(1,64,upscale=True)
-        self.res1 = ResNet(64,128,upscale=True)
-        self.res2 = ResNet(128,16)
-        self.conv = nn.Conv2d(16,3,kernel_size=3, padding=1)
+        self.res1 = ResNet(64,128)
+        self.res2 = ResNet(128,256,upscale=True)
+        self.res3 = ResNet(256,64)
+        self.conv = nn.Conv2d(64,3,kernel_size=3, padding=1)
 
     def forward(self,z):
         batch_size = z.size(0)
@@ -59,6 +60,7 @@ class Decoder(nn.Module):
         
         z = self.res1(z)
         z = self.res2(z)
+        z = self.res3(z)
 
         z = F.relu(self.conv(z))
 

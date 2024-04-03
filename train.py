@@ -79,7 +79,7 @@ def training_loop(n_epochs, optimizer, model, loss_fn, device,
                     loss.backward()
 
                     # Clip gradients
-                    utils.clip_grad_norm_(model.parameters(), max_grad_norm)
+                    #utils.clip_grad_norm_(model.parameters(), max_grad_norm)
 
                     optimizer.step()
                     optimizer.zero_grad()  # Reset gradients
