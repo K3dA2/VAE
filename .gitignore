@@ -163,3 +163,8 @@ train_utils.py
 Weights/
 plot.ipynb
 waifu-VAE-4000-loss.txt
+train copy.py
+flower-VAE1-4000-loss.txt
+img_convert.py
+img_del.py
+

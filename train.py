@@ -10,7 +10,8 @@ from tqdm import tqdm
 import datetime
 import random
 import torch.nn.utils as utils
-from models import VAE,Encoder,Decoder
+#from models import VAE,Encoder,Decoder
+from vae import VariationalAutoencoder,Encoder,Decoder
 
 def get_data(path):
     image_extensions = ['.jpg']
@@ -33,7 +34,7 @@ def kl_loss(mu,l_sigma):
     return kl_loss
 
 def training_loop(n_epochs, optimizer, model, loss_fn, device,
-                  l_weight = 10, kl_weight = 0.1, 
+                  l_weight = 100, kl_weight = 0.1, 
                   epoch_start = 0, batch_size = 64, 
                   data_length = 4000,max_grad_norm=1.0):
     data_idx = list(range(0,data_length))
@@ -87,7 +88,7 @@ def training_loop(n_epochs, optimizer, model, loss_fn, device,
                     
                 
             avg_loss_epoch = loss_train / (data_length//batch_size)
-            with open("waifu-VAE-4000-loss.txt", "a") as file:
+            with open("flower-VAE1-4000-loss.txt", "a") as file:
                 file.write(f"{avg_loss_epoch}\n")
             
             print('{} Epoch {}, Training loss {}'.format(
@@ -107,13 +108,14 @@ def training_loop(n_epochs, optimizer, model, loss_fn, device,
 
 
 if __name__ == "__main__":
-    path = '/Users/ayanfe/Documents/Datasets/animefaces256cleaner'
-    model_path = '/Users/ayanfe/Documents/Code/VAE/Weights/waifu-VAE-4000.pth'
+    path = '/Users/ayanfe/Documents/Datasets/Flower converted'
+    model_path = '/Users/ayanfe/Documents/Code/VAE/Weights/flower-VAE2-4000.pth'
     image_names = get_data(path)
     print("Image Length: ",len(image_names))
 
-    model = VAE(Encoder,Decoder,z_dim=200)
-    device = torch.device("mps")
+    device = torch.device("cpu")
+    #model = VAE(Encoder,Decoder,z_dim=200)
+    model = VariationalAutoencoder(Encoder,Decoder,z_dim=200,device=device)
     model.to(device)
     optimizer = optim.AdamW(model.parameters(),lr=5e-4)
     #checkpoint = torch.load(model_path)
