@@ -88,7 +88,7 @@ def training_loop(n_epochs, optimizer, model, loss_fn, device,
                     
                 
             avg_loss_epoch = loss_train / (data_length//batch_size)
-            with open("flower-VAE1-4000-loss.txt", "a") as file:
+            with open("waifu-VAE1-4000-loss.txt", "a") as file:
                 file.write(f"{avg_loss_epoch}\n")
             
             print('{} Epoch {}, Training loss {}'.format(
@@ -108,8 +108,8 @@ def training_loop(n_epochs, optimizer, model, loss_fn, device,
 
 
 if __name__ == "__main__":
-    path = '/Users/ayanfe/Documents/Datasets/Flower converted'
-    model_path = '/Users/ayanfe/Documents/Code/VAE/Weights/flower-VAE2-4000.pth'
+    path = '/path to your dataset'
+    model_path = '/path to save model'
     image_names = get_data(path)
     print("Image Length: ",len(image_names))
 
