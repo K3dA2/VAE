@@ -11,7 +11,8 @@ import datetime
 import random
 import torch.nn.utils as utils
 #from models import VAE,Encoder,Decoder
-from vae import VariationalAutoencoder,Encoder,Decoder
+#from vae import VariationalAutoencoder,Encoder,Decoder
+from latent_img_vae import VAE,Encoder,Decoder
 
 def get_data(path):
     image_extensions = ['.jpg']
@@ -80,7 +81,7 @@ def training_loop(n_epochs, optimizer, model, loss_fn, device,
                     loss.backward()
 
                     # Clip gradients
-                    #utils.clip_grad_norm_(model.parameters(), max_grad_norm)
+                    utils.clip_grad_norm_(model.parameters(), max_grad_norm)
 
                     optimizer.step()
                     optimizer.zero_grad()  # Reset gradients
@@ -108,14 +109,14 @@ def training_loop(n_epochs, optimizer, model, loss_fn, device,
 
 
 if __name__ == "__main__":
-    path = '/path to your dataset'
-    model_path = '/path to save model'
+    path = '/Users/ayanfe/Documents/Datasets/animefaces256cleaner'
+    model_path = '/Users/ayanfe/Documents/Code/VAE/Weights/waifu-vae-resnet.pth'
     image_names = get_data(path)
     print("Image Length: ",len(image_names))
 
-    device = torch.device("cpu")
-    #model = VAE(Encoder,Decoder,z_dim=200)
-    model = VariationalAutoencoder(Encoder,Decoder,z_dim=200,device=device)
+    device = torch.device("mps")
+    model = VAE(Encoder,Decoder,z_dim=200)
+    #model = VariationalAutoencoder(Encoder,Decoder,z_dim=200,device=device)
     model.to(device)
     optimizer = optim.AdamW(model.parameters(),lr=5e-4)
     #checkpoint = torch.load(model_path)

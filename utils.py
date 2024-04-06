@@ -8,8 +8,9 @@ import unittest
 '''
 This ResNet class is intended to be used as the smallest unit of the block class
 '''
+
 class ResNet(nn.Module):
-    def __init__(self, in_channels = 3 ,out_channels = 32, useMaxPool = False, upscale = False):
+    def __init__(self, in_channels = 3 ,out_channels = 32, useMaxPool = False, upscale = False,dropout_rate = 0.2):
         super().__init__()
         self.num_channels = out_channels
         self.in_channels = in_channels
@@ -19,7 +20,7 @@ class ResNet(nn.Module):
         self.conv2 = nn.Conv2d(out_channels, out_channels//2, kernel_size=3, padding=1)
         self.conv3 = nn.Conv2d(out_channels//2, out_channels, kernel_size=3, padding=1)
         self.skip_conv = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1)
-        self.dropout = nn.Dropout2d(0.2)
+        self.dropout = nn.Dropout2d(dropout_rate)
 
     def forward(self, x):
         # Apply LayerNorm after conv1
@@ -44,15 +45,72 @@ class ResNet(nn.Module):
         else:
             out = F.leaky_relu(out + out1)
         return out
+    
+class StridedResNet(nn.Module):
+    def __init__(self, in_channels = 3 ,out_channels = 32, stride = 2,dropout_rate = 0.2):
+        super().__init__()
+        self.num_channels = out_channels
+        self.in_channels = in_channels
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(out_channels, out_channels//2, kernel_size=3, padding=1)
+        self.conv3 = nn.Conv2d(out_channels//2, out_channels, kernel_size=3, padding=1,stride=stride)
+        self.skip_conv = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1,stride=stride)
+        self.dropout = nn.Dropout2d(dropout_rate)
+
+    def forward(self, x):
+        # Apply LayerNorm after conv1
+        out = F.leaky_relu(self.conv1(x))
+        out = self.dropout(out)
+        out = F.layer_norm(out, out.size()[1:])
+        
+        # Apply LayerNorm after conv2
+        out = F.leaky_relu(self.conv2(out))
+        out = self.dropout(out)
+        out = F.layer_norm(out, out.size()[1:])
+        
+        out1 = self.skip_conv(x)
+        out = F.leaky_relu(self.conv3(out))
+        
+        out = out + out1
+        return out
+
+class ResNetTranspose(nn.Module):
+    def __init__(self, in_channels = 3 ,out_channels = 32, stride = 2,dropout_rate = 0.2):
+        super().__init__()
+        self.num_channels = out_channels
+        self.in_channels = in_channels
+        self.conv1 = nn.ConvTranspose2d(in_channels, out_channels, kernel_size=3, padding=1)
+        self.conv2 = nn.ConvTranspose2d(out_channels, out_channels//2, kernel_size=3, padding=1)
+        self.conv3 = nn.ConvTranspose2d(out_channels//2, out_channels, kernel_size=3, padding=1,stride=stride,output_padding=1)
+        self.skip_conv = nn.ConvTranspose2d(in_channels, out_channels, kernel_size=3, padding=1,stride=stride,output_padding=1)
+        self.dropout = nn.Dropout2d(dropout_rate)
+
+    def forward(self, x):
+        # Apply LayerNorm after conv1
+        out = F.leaky_relu(self.conv1(x))
+        out = self.dropout(out)
+        out = F.layer_norm(out, out.size()[1:])
+        
+        # Apply LayerNorm after conv2
+        out = F.leaky_relu(self.conv2(out))
+        out = self.dropout(out)
+        out = F.layer_norm(out, out.size()[1:])
+        
+        out1 = self.skip_conv(x)
+        out = F.leaky_relu(self.conv3(out))
+        
+        out = out + out1
+        return out
 
 '''
 Unit testing class
 '''
 class TestResNet(unittest.TestCase):
     def test_forward(self):
-        model = ResNet(in_channels=16,out_channels = 16,useMaxPool=False)
+        model = StridedResNet(in_channels=16,out_channels = 16,stride=2)
         input_tensor = torch.randn(1, 16, 64, 64)  # Example input with shape (batch_size, channels, height, width)
         output = model.forward(input_tensor)
+        #print(output.shape)
         self.assertEqual(output.shape, (1, 16, 64, 64))  # Adjust the expected shape based on your model architecture
         
         

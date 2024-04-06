@@ -167,4 +167,6 @@ train copy.py
 flower-VAE1-4000-loss.txt
 img_convert.py
 img_del.py
+Image Samples/
+waifu-VAE1-4000-loss.txt
 

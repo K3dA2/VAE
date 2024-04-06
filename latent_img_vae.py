@@ -11,30 +11,24 @@ import os
 
 
 class Encoder(nn.Module):
-    def __init__(self, z_dim = 64) -> None:
+    def __init__(self,z_dim) -> None:
         super().__init__()
         self.res = StridedResNet(3,64)
         self.res1 = StridedResNet(64,128)
         self.res2 = StridedResNet(128,512)
-        self.ln = nn.Linear(None,512)
-        self.mu = nn.Linear(512,z_dim)
-        self.sigma = nn.Linear(512,z_dim)
-        
+        self.mu = nn.Conv2d(512,4,kernel_size=3,padding=1)
+        self.l_sigma = nn.Conv2d(512,4,kernel_size=3,padding=1)
         
     def forward(self,x):
         x = self.res(x)
+        x = F.layer_norm(x, x.size()[1:])
         x = self.res1(x)
+        x = F.layer_norm(x, x.size()[1:])
         x = self.res2(x)
-
-        # Flatten the output
-        batch_size = x.size(0)
-        flattened_size = x.view(batch_size, -1).size(1)  # Calculate the flattened size dynamically
-        x = x.view(batch_size, -1)
-        
-        x = nn.Linear(flattened_size,512).to(x.device)(x)
+        x = F.layer_norm(x, x.size()[1:])
 
         mu = self.mu(x)
-        l_sigma = self.sigma(x)
+        l_sigma = self.l_sigma(x)
 
         z = mu + torch.exp(l_sigma/2)*torch.rand_like(l_sigma)
 
@@ -45,7 +39,7 @@ class Decoder(nn.Module):
     def __init__(self, z_dim=64) -> None:
         super().__init__()
         self.z_dim = z_dim
-        self.ln = nn.Linear(z_dim,256)
+        self.fres = ResNetTranspose(4,32)
         self.res = ResNetTranspose(32,64)
         self.res1 = ResNet(64,128)
         self.res2 = ResNetTranspose(128,256)
@@ -53,17 +47,18 @@ class Decoder(nn.Module):
         self.conv = nn.Conv2d(64,3,kernel_size=3, padding=1)
 
     def forward(self,z):
-        batch_size = z.size(0)
-        z = self.ln(z)
-        z = z.view(batch_size,1,16,16)
-        
+        z = self.fres(z)
+        z = F.layer_norm(z, z.size()[1:])
         z = self.res(z)
-        
+        z = F.layer_norm(z, z.size()[1:])
         z = self.res1(z)
+        z = F.layer_norm(z, z.size()[1:])
         z = self.res2(z)
+        z = F.layer_norm(z, z.size()[1:])
         z = self.res3(z)
+        z = F.layer_norm(z, z.size()[1:])
 
-        z = F.relu(self.conv(z))
+        z = F.sigmoid(self.conv(z))
 
         return z
 
@@ -83,7 +78,7 @@ class VAE(nn.Module):
         return mu,l_sigma,out
     
     def inferenceR(self,should_save = True):
-        z_var = torch.rand(1,self.z_dim).to(self.device)
+        z_var = torch.rand(1,4,8,8).to(self.device)
         self.decoder.eval()
         pred = self.decoder.forward(z_var)
         if should_save:
