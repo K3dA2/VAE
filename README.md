@@ -50,6 +50,18 @@ Here are the plots showing how the model's loss flattens with each epoch count
 ![waifu-vae-loss](https://github.com/K3dA2/VAE/assets/112480809/09ee7e65-54e0-4753-8a2c-459229d191ef)
 ![waifu-vae-ema](https://github.com/K3dA2/VAE/assets/112480809/9a45df56-c979-489b-88f2-9683f3995c8b)
 
+## Updates
+I trained a seperate model that predicts latent matrices instead of flatened latent vectors. Here are some of the samples:
+
+![5f49e419-a0f6-4a83-a03b-23d76b7ad614](https://github.com/K3dA2/VAE/assets/112480809/873b533e-5366-4324-8493-4c77d76d5e31)
+![ef9e246a-6026-46a7-a2ca-3a105be3f391](https://github.com/K3dA2/VAE/assets/112480809/091f8eeb-dfb5-494c-99ed-aacaaea080a9)
+![e4a9d972-973b-4a57-805e-9860ed3b82e1](https://github.com/K3dA2/VAE/assets/112480809/703d247a-31b1-40fc-b99d-97b8cd16d9ee)
+
+compared to the regular latent vector version this model produces images with more variations. It also reached a lower loss than the latent vector model. Here are plots of the losses;
+
+![latent-image-waifu-vae-loss](https://github.com/K3dA2/VAE/assets/112480809/c7d3342b-27cc-4627-9171-3d0713f340d5)
+![latent-image-waifu-vae-ema](https://github.com/K3dA2/VAE/assets/112480809/11680f21-8950-4581-9141-bcc30ac2d9d9)
+
 
 ### Future Work
 
