@@ -169,4 +169,9 @@ img_convert.py
 img_del.py
 Image Samples/
 waifu-VAE1-4000-loss.txt
+vae_training_loss.txt
+vae_training_recon_loss.txt
+latent_conv_img_vae.py
+Reconstructed/
+Images/
 

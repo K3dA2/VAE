@@ -8,6 +8,7 @@ from utils import ResNet
 import matplotlib.pyplot as plt
 import uuid
 import os
+import cv2
 
 
 class Encoder(nn.Module):
@@ -53,14 +54,14 @@ class Decoder(nn.Module):
         super().__init__()
         self.z_dim = z_dim
         self.ln = nn.Linear(z_dim,576)
-        self.conv = nn.ConvTranspose2d(64,64,kernel_size=3,stride=2)
-        self.conv1 = nn.ConvTranspose2d(64,64,kernel_size=3,stride=2)
-        self.conv2 = nn.ConvTranspose2d(64,32,kernel_size=3,stride=2)
+        self.conv = nn.ConvTranspose2d(64,128,kernel_size=3,stride=2)
+        self.conv1 = nn.ConvTranspose2d(128,256,kernel_size=3,stride=2)
+        self.conv2 = nn.ConvTranspose2d(256,32,kernel_size=3,stride=2)
         self.conv3 = nn.ConvTranspose2d(32,3,kernel_size=3,stride=2,output_padding=1)
-        self.batch_norm = nn.BatchNorm2d(64)
-        self.batch_norm1 = nn.BatchNorm2d(64)
+        self.batch_norm = nn.BatchNorm2d(128)
+        self.batch_norm1 = nn.BatchNorm2d(256)
         self.batch_norm2 = nn.BatchNorm2d(32)
-        self.dropout = nn.Dropout2d(0.25)
+        self.dropout = nn.Dropout2d(0.2)
         self.data_shape = data_shape
 
     def forward(self,z):
@@ -126,6 +127,25 @@ class VariationalAutoencoder(nn.Module):
             plt.imshow(np.transpose(pred[-1].cpu().detach().numpy(), (1, 2, 0)))
             plt.show()
         self.decoder.train()
+
+    def reconstruct(self, data):
+        self.decoder.eval()
+        self.encoder.eval()
+        
+        _,_,l_img,_,_ = self.encoder(data)  # Pass data through the decoder
+        img_rec = self.decoder(l_img)  # Pass the output of the decoder to the encoder
+        
+        plt.imshow(np.transpose(img_rec[-1].cpu().detach().numpy(), (1, 2, 0)))
+        plt.axis('off')  # Hide the axes
+
+        # Generate a random filename and specify the directory to save the image
+        random_filename = str(uuid.uuid4()) + '.png'
+        save_directory = 'Reconstructed/'
+        full_path = os.path.join(save_directory, random_filename)
+        plt.savefig(full_path, bbox_inches='tight', pad_inches=0)  # Save the image
+        self.decoder.train()
+        self.encoder.train()
+
 
 
 

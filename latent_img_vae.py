@@ -8,6 +8,7 @@ from utils import ResNet,StridedResNet,ResNetTranspose
 import matplotlib.pyplot as plt
 import uuid
 import os
+import cv2
 
 
 class Encoder(nn.Module):
@@ -21,16 +22,16 @@ class Encoder(nn.Module):
         
     def forward(self,x):
         x = self.res(x)
-        x = F.layer_norm(x, x.size()[1:])
+        
         x = self.res1(x)
-        x = F.layer_norm(x, x.size()[1:])
+        
         x = self.res2(x)
-        x = F.layer_norm(x, x.size()[1:])
+        
 
         mu = self.mu(x)
         l_sigma = self.l_sigma(x)
 
-        z = mu + torch.exp(l_sigma/2)*torch.rand_like(l_sigma)
+        z = mu + torch.exp(l_sigma/2) * torch.rand_like(l_sigma)
 
         return mu,l_sigma,z
 
@@ -48,17 +49,17 @@ class Decoder(nn.Module):
 
     def forward(self,z):
         z = self.fres(z)
-        z = F.layer_norm(z, z.size()[1:])
+        
         z = self.res(z)
-        z = F.layer_norm(z, z.size()[1:])
+        
         z = self.res1(z)
-        z = F.layer_norm(z, z.size()[1:])
+        
         z = self.res2(z)
-        z = F.layer_norm(z, z.size()[1:])
+        
         z = self.res3(z)
-        z = F.layer_norm(z, z.size()[1:])
+        
 
-        z = F.sigmoid(self.conv(z))
+        z = self.conv(z)
 
         return z
 
@@ -78,7 +79,7 @@ class VAE(nn.Module):
         return mu,l_sigma,out
     
     def inferenceR(self,should_save = True):
-        z_var = torch.rand(1,4,8,8).to(self.device)
+        z_var = torch.rand(1,4,4,4).to(self.device)
         self.decoder.eval()
         pred = self.decoder.forward(z_var)
         if should_save:
@@ -99,7 +100,38 @@ class VAE(nn.Module):
             plt.show()
         self.decoder.train()
 
-
+    def reconstruct(self, data):
+        self.decoder.eval()
+        self.encoder.eval()
+        
+        # Pass data through the encoder and decoder
+        _, _, l_img = self.encoder(data)
+        img_rec = self.decoder(l_img)
+        
+        # Convert tensors to numpy arrays and transpose the dimensions
+        img_orig = np.transpose(data[-1].cpu().detach().numpy(), (1, 2, 0))
+        img_rec = np.transpose(img_rec[-1].cpu().detach().numpy(), (1, 2, 0))
+        
+        # Concatenate the original and reconstructed images horizontally
+        img_concat = np.concatenate((img_orig, img_rec), axis=1)
+        
+        # Display the concatenated image
+        plt.imshow(img_concat)
+        plt.axis('off')  # Hide the axes
+        
+        # Generate a random filename and specify the directory to save the image
+        random_filename = str(uuid.uuid4()) + '.png'
+        save_directory = 'Reconstructed/'
+        os.makedirs(save_directory, exist_ok=True)
+        full_path = os.path.join(save_directory, random_filename)
+        
+        # Save the image
+        plt.savefig(full_path, bbox_inches='tight', pad_inches=0)
+        
+        # Restore the model to training mode
+        self.decoder.train()
+        self.encoder.train()
+        
 
 
 class TestEncoder(unittest.TestCase):
@@ -111,9 +143,9 @@ class TestEncoder(unittest.TestCase):
         self.assertEqual(mu.shape,(1,64))
         '''
         model = Decoder()
-        input_tensor = torch.randn(1, 4,8,8)
+        input_tensor = torch.randn(1, 4,4,4)
         out = model.forward(input_tensor)
-        self.assertEqual(out.shape,(1,3,64,64))
+        self.assertEqual(out.shape,(1,3,32,32))
         
 
 if __name__ == "__main__":
