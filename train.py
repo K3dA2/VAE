@@ -10,7 +10,7 @@ from tqdm import tqdm
 import datetime
 import random
 import torch.nn.utils as utils
-from latent_img_vae import VAE,Encoder,Decoder
+from latent_img_vae import VAE,Encoder,Decoder,VAEConfig
 from utils import get_data_loader
 
 
@@ -89,8 +89,8 @@ if __name__ == "__main__":
         device = "mps"
     print(f"using device: {device}")
 
-    model = VAE(Encoder,Decoder,z_dim=200)
-    #model = VariationalAutoencoder(Encoder,Decoder,z_dim=200,device=device)
+    config = VAEConfig(device=device)
+    model = VAE(config)
     model.to(device)
     optimizer = optim.AdamW(model.parameters(),lr=3e-4)
 
